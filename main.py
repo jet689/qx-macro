@@ -1,10 +1,10 @@
 import time
 import tkinter as tk
 import json
-import keyboard
-
-
-print(keyboard.__file__)
+from pynput import keyboard
+from pynput.keyboard import Key,Controller
+controller=Controller()
+# print(keyboard.__file__)
 
 pg = 0
 val = True
@@ -13,7 +13,7 @@ f = open("data.json", "r")
 data = json.loads(f.read())
 f.close()
 
-str=""
+str_=""
 keys=[]
 
 for i in range(0,34):
@@ -91,10 +91,17 @@ def save():
     f.write(json.dumps(data))
     f.close()
 
-
+def name(key_):
+    key=str(key_)
+    print(key,type(key))
+    try:
+        return key.char
+    except AttributeError:
+        return key
+    
 def keystore(e):
-    global str
-    key=e.name
+    global str_
+    key=name(e).removeprefix("Key.").removeprefix("'").removesuffix("'")
     if key!="backspace":
         str1=""
         for i in range(0,33):
@@ -108,7 +115,7 @@ def keystore(e):
             keys[0]=" "
         str1=str1+f"{keys[0]}"
         print(keys,str1)
-        str=str1
+        str_=str1
     else:
         str1=""
         for i in range(0,33):
@@ -121,8 +128,8 @@ def keystore(e):
         else:
             keys[0]=" "
         str1=str1+f"{keys[0]}"
-        print(keys,str1)
-        str=str1
+        print(str1)
+        str_=str(str1)
 
 
 
@@ -131,8 +138,8 @@ def keystore(e):
 
 
 
-keyboard.on_release(keystore, suppress=False)
-
+listen=keyboard.Listener(on_press=keystore)
+listen.start()
 
 
 
@@ -140,9 +147,9 @@ keyboard.on_release(keystore, suppress=False)
 
 def updatedict():
     tc.destroy()
-    str=""
+    str_=""
     for i in range(0,len(data[1])):
-        str=str+f"pg {i}  {data[1][i][0]}. "
+        str_=str_+f"pg {i}  {data[1][i][0]}. "
     
     tc= tk.Text(root, font=("Arial", 15), height=3, width=60)
     tc.pack(pady=80)
@@ -150,7 +157,7 @@ def updatedict():
     tc.config(state="disabled")
 
 def loop():
-    global str
+    global str_
     global num1
     global pg
     # print(num1.get_val())
@@ -179,22 +186,22 @@ def loop():
         root.destroy()   
         return
     for i in data[1]:
-        if str!=str.removesuffix("qx."+f"{i[0]}"):
+        if str_!=str_.removesuffix("qx."+f"{i[0]}"):
             print(i)
             print(i[1])
             for j in "qx."+f"{i[0]}":
-                keyboard.send("backspace")
-                time.sleep(0.1)
-            keyboard.write(i[1].removesuffix("\n"))
-            str=str+"^"
+                time.sleep(0.05)
+                controller.tap(Key.backspace)
+            controller.type(i[1].removesuffix("\n"))
+            str_=str_+"^"
             break
     root.after(200, loop)
 
 
 def getdict():
-    str=""
+    str_=""
     for i in range(0,len(data[1])):
-        str=str+f"pg {i}  {data[1][i][0]}. "
+        str_=str_+f"pg {i}  {data[1][i][0]}. "
     return str
 
 
